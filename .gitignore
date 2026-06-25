@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+data.sqlite
+dashboard.html
+config/settings.toml
+*.log
+esamina_*.py
+prova_*.py
+trova_*.py
+analizza.py
+verifica_*.py
+sistema_db.py
+diagnostica_pvp.py
+primo_giro_silenzioso.py
+pulisci_scadute.py

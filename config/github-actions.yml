@@ -1,0 +1,51 @@
+# Schedulazione gratuita su GitHub Actions, ogni 8 ore.
+# Lo stato (data.sqlite) viene conservato tra un run e l'altro tramite cache,
+# cosi' il sistema ricorda cosa ha gia' notificato e non ripete.
+#
+# Setup:
+#  - metti questo file in .github/workflows/monitor.yml del tuo repo
+#  - in Settings -> Secrets and variables -> Actions crea:
+#      TG_TOKEN, TG_CHAT_ID
+name: monitor-aste-hotel
+
+on:
+  schedule:
+    - cron: "0 */8 * * *"   # ogni 8 ore
+  workflow_dispatch: {}      # permette l'avvio manuale dal tab Actions
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      # ripristina lo stato precedente (se esiste)
+      - name: Restore state
+        uses: actions/cache@v4
+        with:
+          path: data.sqlite
+          key: aste-state-${{ github.run_id }}
+          restore-keys: aste-state-
+
+      - name: Build config from secrets
+        run: |
+          mkdir -p config
+          cat > config/settings.toml <<EOF
+          sources = ["pvp","astegiudiziarie","astalegale","fallcoaste","fallimenti","fallimentieaste"]
+          [filters]
+          min_price = 0
+          regions = []
+          [telegram]
+          token = "${{ secrets.TG_TOKEN }}"
+          chat_id = "${{ secrets.TG_CHAT_ID }}"
+          EOF
+
+      - name: Run monitor
+        run: python -m aste_hotel.run

@@ -1,0 +1,24 @@
+# Copia questo file in config/settings.toml e personalizzalo.
+# NON committare settings.toml con il token reale: usa i Secret (vedi README).
+
+# Quali fonti attivare. Commenta quelle che non vuoi.
+sources = [
+  "pvp",
+  "astegiudiziarie",
+  "astalegale",
+  "fallcoaste",
+  "fallimenti",
+  "fallimentieaste",
+]
+
+[filters]
+# Notifica solo lotti sopra questa base d'asta (in euro). Lascia 0 per tutti.
+min_price = 0
+# Filtra per regione (lista). Vuota = tutte le regioni.
+regions = []
+
+[telegram]
+# Da @BotFather e da getUpdates. In produzione passali via variabili d'ambiente
+# / GitHub Secrets invece di scriverli qui in chiaro.
+token = ""
+chat_id = ""
