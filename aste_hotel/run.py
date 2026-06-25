@@ -10,7 +10,7 @@ from .sources.fallcoaste import FallcoasteSource
 from .sources.astegiudiziarie import AstegiudiziarieSource
 from .sources.astalegale import AstalegaleSource
 from .sources.portali import (FallimentiSource, FallimentieasteSource)
-from .sinks.notify import TelegramSink, ConsoleSink
+from .sinks.notify import TelegramSink, ConsoleSink, EmailSink, MultiSink
 
 logging.basicConfig(level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -45,11 +45,24 @@ def passes_filters(lst: Listing, flt: dict) -> bool:
     return True
 
 def build_sink(cfg: dict):
+    sinks = []
     tg = cfg.get("telegram", {})
     if tg.get("token") and tg.get("chat_id"):
-        return TelegramSink(tg["token"], tg["chat_id"])
-    log.info("Telegram non configurato -> uso ConsoleSink")
-    return ConsoleSink()
+        sinks.append(TelegramSink(tg["token"], tg["chat_id"]))
+    em = cfg.get("email", {})
+    if em.get("user") and em.get("password") and em.get("to"):
+        sinks.append(EmailSink(
+            host=em.get("host", "smtp.gmail.com"),
+            port=em.get("port", 587),
+            user=em["user"], password=em["password"],
+            to=em["to"], cc=em.get("cc", []),
+        ))
+    if not sinks:
+        log.info("nessun canale configurato -> uso ConsoleSink")
+        return ConsoleSink()
+    if len(sinks) == 1:
+        return sinks[0]
+    return MultiSink(sinks)
 
 def main():
     cfg = load_config()

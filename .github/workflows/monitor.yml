@@ -2,8 +2,8 @@ name: monitor-aste-hotel
 
 on:
   schedule:
-    - cron: "0 */8 * * *"   # ogni 8 ore
-  workflow_dispatch: {}      # avvio manuale dal tab Actions
+    - cron: "0 */8 * * *"
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -19,21 +19,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Installa dipendenze
         run: pip install -r requirements.txt
-
       - name: Ripristina database dalla cache
         uses: actions/cache@v4
         with:
           path: data.sqlite
           key: aste-db-${{ github.run_id }}
           restore-keys: aste-db-
-
       - name: Costruisci config dai secret
         run: |
           mkdir -p config
@@ -46,12 +42,18 @@ jobs:
           [telegram]
           token = "${{ secrets.TG_TOKEN }}"
           chat_id = "${{ secrets.TG_CHAT_ID }}"
+          [email]
+          host = "smtp.gmail.com"
+          port = 587
+          user = "${{ secrets.MAIL_USER }}"
+          password = "${{ secrets.MAIL_PASS }}"
+          to = ["${{ secrets.MAIL_TO }}"]
+          cc = ["c.cannava@londonfs.co.uk"]
           EOF
-
       - name: Primo giro silenzioso se database assente
         run: |
           if [ ! -f data.sqlite ]; then
-            echo "Database assente: popolo in silenzio senza notifiche"
+            echo "Database assente: popolo in silenzio"
             python -c "
           from pathlib import Path
           from aste_hotel.core.store import Store
@@ -69,10 +71,8 @@ jobs:
           print('popolamento iniziale completato')
           "
           fi
-
       - name: Esegui il monitor
         run: python -m aste_hotel.run
-
       - name: Genera dashboard
         run: |
           mkdir -p site
@@ -82,13 +82,11 @@ jobs:
           open('site/index.html','w',encoding='utf-8').write(html)
           print('dashboard generata')
           "
-
       - name: Salva database in cache
         uses: actions/cache/save@v4
         with:
           path: data.sqlite
           key: aste-db-${{ github.run_id }}
-
       - name: Pubblica dashboard su Pages
         uses: actions/upload-pages-artifact@v3
         with:

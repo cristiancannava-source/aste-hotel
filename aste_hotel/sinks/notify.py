@@ -83,3 +83,74 @@ class ConsoleSink(Sink):
             print("-" * 60)
             print(_fmt(lst).replace("<b>", "").replace("</b>", "")
                   .replace("<i>", "").replace("</i>", ""))
+
+
+# --- Email (SMTP Gmail) ---
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+DASHBOARD_URL = "https://cristiancannava-source.github.io/aste-hotel/"
+
+
+def _email_html(listings):
+    righe = []
+    for lst in listings:
+        price = f"{lst.price:,.0f} €".replace(",", ".") if lst.price else "n/d"
+        loc = " · ".join(p for p in [lst.city, lst.province, lst.region] if p)
+        trib = f"{lst.tribunale} {lst.procedura}".strip()
+        data = lst.sale_date[:10] if lst.sale_date else ""
+        if data and "-" in data:
+            data = "/".join(reversed(data.split("-")))
+        righe.append(f'<tr><td style="padding:12px;border-bottom:1px solid #eee;"><a href="{_esc(lst.url)}" style="color:#1558d6;text-decoration:none;font-weight:600;">{_esc(lst.title[:140])}</a><br><span style="color:#555;font-size:13px;">{_esc(loc)}</span></td><td style="padding:12px;border-bottom:1px solid #eee;white-space:nowrap;font-weight:600;color:#0a7d4b;">{_esc(price)}</td><td style="padding:12px;border-bottom:1px solid #eee;font-size:13px;color:#555;">{_esc(trib)}</td><td style="padding:12px;border-bottom:1px solid #eee;font-size:13px;color:#555;white-space:nowrap;">{_esc(data)}</td><td style="padding:12px;border-bottom:1px solid #eee;font-size:12px;color:#888;">{_esc(lst.source)}</td></tr>')
+    return f'''<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:760px;margin:auto;">
+<h2 style="color:#222;">🏨 Nuove aste alberghiere ({len(listings)})</h2>
+<table style="width:100%;border-collapse:collapse;font-size:14px;">
+<tr style="text-align:left;color:#888;font-size:12px;"><th style="padding:8px 12px;">Lotto</th><th style="padding:8px 12px;">Base</th><th style="padding:8px 12px;">Tribunale</th><th style="padding:8px 12px;">Vendita</th><th style="padding:8px 12px;">Fonte</th></tr>
+{"".join(righe)}
+</table>
+<div style="margin:24px 0;text-align:center;">
+<a href="{DASHBOARD_URL}" style="display:inline-block;background:#1558d6;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px;">📊 Apri la dashboard completa</a>
+</div>
+<p style="color:#aaa;font-size:12px;margin-top:8px;text-align:center;">Monitoraggio automatico aste hotel · <a href="{DASHBOARD_URL}" style="color:#999;">{DASHBOARD_URL}</a></p>
+</div>'''
+
+
+class EmailSink(Sink):
+    def __init__(self, host, port, user, password, to, cc=None):
+        self.host, self.port = host, port
+        self.user, self.password = user, password
+        self.to = to
+        self.cc = cc or []
+
+    def send(self, listings):
+        if not listings:
+            return
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"🏨 {len(listings)} nuove aste alberghiere"
+        msg["From"] = self.user
+        msg["To"] = ", ".join(self.to)
+        if self.cc:
+            msg["Cc"] = ", ".join(self.cc)
+        msg.attach(MIMEText(_email_html(listings), "html", "utf-8"))
+        destinatari = self.to + self.cc
+        try:
+            with smtplib.SMTP(self.host, self.port, timeout=30) as s:
+                s.starttls()
+                s.login(self.user, self.password)
+                s.sendmail(self.user, destinatari, msg.as_string())
+            log.info("email inviata a %d destinatari", len(destinatari))
+        except Exception as e:
+            log.error("invio email fallito: %s", e)
+
+
+class MultiSink(Sink):
+    def __init__(self, sinks):
+        self.sinks = sinks
+
+    def send(self, listings):
+        for s in self.sinks:
+            try:
+                s.send(listings)
+            except Exception as e:
+                log.error("sink %s fallito: %s", type(s).__name__, e)
