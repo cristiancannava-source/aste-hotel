@@ -2,7 +2,8 @@ name: monitor-aste-hotel
 
 on:
   schedule:
-    - cron: "0 */8 * * *"
+    - cron: "0 8 * * *"
+    - cron: "0 16 * * *"
   workflow_dispatch: {}
 
 permissions:
