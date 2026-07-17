@@ -49,13 +49,18 @@ def _esc(s: str) -> str:
 
 
 class TelegramSink(Sink):
-    def __init__(self, token: str, chat_id: str):
+    def __init__(self, token: str, chat_id: str, etichetta=None, emoji="🏨"):
         self.token = token
         self.chat_id = chat_id
+        self.etichetta = etichetta
+        self.emoji = emoji
 
     def send(self, listings: list[Listing]) -> None:
         for lst in listings:
-            self._send_one(_fmt(lst))
+            testo = _fmt(lst)
+            if self.etichetta:
+                testo = f"{self.emoji} <b>{self.etichetta.upper()}</b>\n\n" + testo
+            self._send_one(testo)
 
     def _send_one(self, text: str) -> None:
         url = f"https://api.telegram.org/bot{self.token}/sendMessage"
@@ -93,7 +98,7 @@ from email.mime.text import MIMEText
 DASHBOARD_URL = "https://cristiancannava-source.github.io/aste-hotel/"
 
 
-def _email_html(listings):
+def _email_html(listings, etichetta="Nuove aste alberghiere", emoji="🏨"):
     righe = []
     for lst in listings:
         price = f"{lst.price:,.0f} €".replace(",", ".") if lst.price else "n/d"
@@ -104,7 +109,7 @@ def _email_html(listings):
             data = "/".join(reversed(data.split("-")))
         righe.append(f'<tr><td style="padding:12px;border-bottom:1px solid #eee;"><a href="{_esc(lst.url)}" style="color:#1558d6;text-decoration:none;font-weight:600;">{_esc(lst.title[:140])}</a><br><span style="color:#555;font-size:13px;">{_esc(loc)}</span></td><td style="padding:12px;border-bottom:1px solid #eee;white-space:nowrap;font-weight:600;color:#0a7d4b;">{_esc(price)}</td><td style="padding:12px;border-bottom:1px solid #eee;font-size:13px;color:#555;">{_esc(trib)}</td><td style="padding:12px;border-bottom:1px solid #eee;font-size:13px;color:#555;white-space:nowrap;">{_esc(data)}</td><td style="padding:12px;border-bottom:1px solid #eee;font-size:12px;color:#888;">{_esc(lst.source)}</td></tr>')
     return f'''<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:760px;margin:auto;">
-<h2 style="color:#222;">🏨 Nuove aste alberghiere ({len(listings)})</h2>
+<h2 style="color:#222;">{emoji} {etichetta} ({len(listings)})</h2>
 <table style="width:100%;border-collapse:collapse;font-size:14px;">
 <tr style="text-align:left;color:#888;font-size:12px;"><th style="padding:8px 12px;">Lotto</th><th style="padding:8px 12px;">Base</th><th style="padding:8px 12px;">Tribunale</th><th style="padding:8px 12px;">Vendita</th><th style="padding:8px 12px;">Fonte</th></tr>
 {"".join(righe)}
@@ -117,22 +122,24 @@ def _email_html(listings):
 
 
 class EmailSink(Sink):
-    def __init__(self, host, port, user, password, to, cc=None):
+    def __init__(self, host, port, user, password, to, cc=None, etichetta=None, emoji="🏨"):
         self.host, self.port = host, port
         self.user, self.password = user, password
         self.to = to
         self.cc = cc or []
+        self.etichetta = etichetta or "nuove aste alberghiere"
+        self.emoji = emoji
 
     def send(self, listings):
         if not listings:
             return
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"🏨 {len(listings)} nuove aste alberghiere"
+        msg["Subject"] = f"{self.emoji} {len(listings)} {self.etichetta}"
         msg["From"] = self.user
         msg["To"] = ", ".join(self.to)
         if self.cc:
             msg["Cc"] = ", ".join(self.cc)
-        msg.attach(MIMEText(_email_html(listings), "html", "utf-8"))
+        msg.attach(MIMEText(_email_html(listings, self.etichetta.capitalize(), self.emoji), "html", "utf-8"))
         destinatari = self.to + self.cc
         try:
             with smtplib.SMTP(self.host, self.port, timeout=30) as s:

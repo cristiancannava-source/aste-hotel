@@ -48,7 +48,7 @@ def build_sink(cfg: dict):
     sinks = []
     tg = cfg.get("telegram", {})
     if tg.get("token") and tg.get("chat_id"):
-        sinks.append(TelegramSink(tg["token"], tg["chat_id"]))
+        sinks.append(TelegramSink(tg["token"], tg["chat_id"], "nuove aste alberghiere", "🏨"))
     em = cfg.get("email", {})
     if em.get("user") and em.get("password") and em.get("to"):
         sinks.append(EmailSink(
@@ -56,6 +56,7 @@ def build_sink(cfg: dict):
             port=em.get("port", 587),
             user=em["user"], password=em["password"],
             to=em["to"], cc=em.get("cc", []),
+            etichetta="nuove aste alberghiere", emoji="🏨",
         ))
     if not sinks:
         log.info("nessun canale configurato -> uso ConsoleSink")

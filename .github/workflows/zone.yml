@@ -1,0 +1,90 @@
+name: monitor-zone
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+    - cron: "0 16 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "monitor-zone"
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Installa dipendenze
+        run: pip install -r requirements.txt
+      - name: Ripristina database zone dalla cache
+        uses: actions/cache@v4
+        with:
+          path: data_zone.sqlite
+          key: zone-db-${{ github.run_id }}
+          restore-keys: zone-db-
+      - name: Costruisci config dai secret
+        run: |
+          mkdir -p config
+          cat > config/settings_zone.toml <<EOF
+          [filtri]
+          parioli_min_mq = 150
+          [telegram]
+          token = "${{ secrets.TG_TOKEN }}"
+          chat_id = "${{ secrets.TG_CHAT_ID }}"
+          [email]
+          host = "smtp.gmail.com"
+          port = 587
+          user = "${{ secrets.MAIL_USER }}"
+          password = "${{ secrets.MAIL_PASS }}"
+          to = ["${{ secrets.MAIL_TO }}"]
+          cc = ["c.cannava@londonfs.co.uk"]
+          EOF
+      - name: Primo giro silenzioso se database assente
+        run: |
+          if [ ! -f data_zone.sqlite ]; then
+            echo "Database zone assente: popolo in silenzio"
+            python -c "
+          from pathlib import Path
+          from datetime import date
+          from aste_hotel.core.store import Store
+          from aste_hotel.zone import ZONE
+          from aste_hotel.metratura import estrai_mq
+          from aste_hotel.sources import pvp_zone
+          from aste_hotel.run_zone import to_listing
+          store = Store(Path('data_zone.sqlite'))
+          oggi = date.today().isoformat()
+          for chiave, zona in ZONE.items():
+              for item in pvp_zone.cerca_intorno(zona.centro, zona.raggio_km):
+                  ind = item.get('indirizzo') or {}
+                  co = ind.get('coordinate') or {}
+                  if not zona.comune_pertinente(ind.get('citta') or ''):
+                      continue
+                  dentro, metodo = zona.contiene(co.get('latitudine'), co.get('longitudine'),
+                      f\"{ind.get('via','')} {ind.get('citta','')}\")
+                  if not dentro:
+                      continue
+                  mq = estrai_mq(item.get('descLotto') or '')
+                  if chiave == 'parioli' and mq is not None and mq < 150:
+                      continue
+                  sd = str(item.get('dataOraVendita') or '')[:10]
+                  if sd and sd < oggi:
+                      continue
+                  n = store.process([to_listing(item, chiave, mq, metodo)])
+                  store.mark_notified([l.uid for l in n])
+          print('popolamento zone completato')
+          "
+          fi
+      - name: Esegui il monitor zone
+        run: python -m aste_hotel.run_zone
+      - name: Salva database zone in cache
+        uses: actions/cache/save@v4
+        with:
+          path: data_zone.sqlite
+          key: zone-db-${{ github.run_id }}
