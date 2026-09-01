@@ -27,8 +27,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: data_zone.sqlite
-          key: zone-db-${{ github.run_id }}
-          restore-keys: zone-db-
+          key: zone-db-v2-${{ github.run_id }}
+          restore-keys: zone-db-v2-
       - name: Costruisci config dai secret
         run: |
           mkdir -p config
@@ -87,4 +87,4 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: data_zone.sqlite
-          key: zone-db-${{ github.run_id }}
+          key: zone-db-v2-${{ github.run_id }}
