@@ -134,6 +134,24 @@ PONTE_MILVIO = _z("Ponte Milvio",
     ["ponte milvio","piazzale ponte milvio","via capoprati","foro italico",
      "lungotevere maresciallo cadorna"])
 
+TRIESTE = _z("Trieste",
+    [(41.9280,12.5010),(41.9310,12.5150),(41.9240,12.5220),(41.9160,12.5180),
+     (41.9150,12.5040),(41.9210,12.4990)],
+    ["corso trieste","piazza istria","viale libia","viale eritrea","viale somalia",
+     "piazza crati","quartiere africano","via nomentana media"])
+
+SALARIO = _z("Salario",
+    [(41.9180,12.4960),(41.9200,12.5050),(41.9140,12.5080),(41.9080,12.5020),
+     (41.9100,12.4930),(41.9150,12.4920)],
+    ["salario","piazza fiume","via salaria","corso d italia","villa albani",
+     "via po","piazza buenos aires","via bergamo"])
+
+BOLOGNA = _z("Bologna",
+    [(41.9150,12.5140),(41.9180,12.5280),(41.9100,12.5330),(41.9030,12.5250),
+     (41.9050,12.5130),(41.9110,12.5100)],
+    ["piazza bologna","viale delle province","via tiburtina","la sapienza",
+     "via lorenzo il magnifico","via catania","via ravenna","via michele di lando"])
+
 # ---- PORTO CERVO (invariata) ----
 PORTO_CERVO = Zona(
     nome="Porto Cervo", comuni=["Arzachena"], centro="41.1300,9.5350", raggio_km=5,
@@ -150,7 +168,9 @@ ZONE = {
     "mazzini": MAZZINI, "della_vittoria": DELLA_VITTORIA, "degli_eroi": DEGLI_EROI,
     "parioli": PARIOLI, "flaminio": FLAMINIO, "trastevere": TRASTEVERE,
     "corso_francia": CORSO_FRANCIA, "vigna_clara": VIGNA_CLARA, "fleming": FLEMING,
-    "ponte_milvio": PONTE_MILVIO, "porto_cervo": PORTO_CERVO,
+    "ponte_milvio": PONTE_MILVIO,
+    "trieste": TRIESTE, "salario": SALARIO, "bologna": BOLOGNA,
+    "porto_cervo": PORTO_CERVO,
 }
 
 # zone che condividono la stessa ricerca API (stesso centro Roma)
