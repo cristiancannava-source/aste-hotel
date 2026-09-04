@@ -10,6 +10,7 @@ from .sources.fallcoaste import FallcoasteSource
 from .sources.astegiudiziarie import AstegiudiziarieSource
 from .sources.astalegale import AstalegaleSource
 from .sources.portali import (FallimentiSource, FallimentieasteSource)
+from .export_json import esporta
 from .sinks.notify import TelegramSink, ConsoleSink, EmailSink, MultiSink
 
 logging.basicConfig(level=logging.INFO,
@@ -88,6 +89,7 @@ def main():
     if new:
         sink.send(new)
         store.mark_notified([l.uid for l in new])
+    esporta(str(db_path), str(db_path.parent / "data_hotel.json"))
     log.info("fatto.")
 
 if __name__ == "__main__":

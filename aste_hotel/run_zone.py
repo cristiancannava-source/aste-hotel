@@ -11,6 +11,7 @@ from .sinks.notify import TelegramSink, ConsoleSink, EmailSink, MultiSink
 from .zone import ZONE, ZONE_ROMA, CENTRO_ROMA, RAGGIO_ROMA
 from .metratura import estrai_mq
 from .sources import pvp_zone
+from .export_json import esporta
 
 logging.basicConfig(level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -120,6 +121,7 @@ def main():
     log.info("Scaricati %d lotti nell'area di Porto Cervo", len(grezzi_pc))
     processa_gruppo(cfg, store, ["porto_cervo"], grezzi_pc)
 
+    esporta(str(DB), str(DB.parent / "data_zone.json"))
     log.info("fatto.")
 
 if __name__ == "__main__":

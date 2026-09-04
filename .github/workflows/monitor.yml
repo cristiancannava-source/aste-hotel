@@ -74,14 +74,22 @@ jobs:
           fi
       - name: Esegui il monitor
         run: python -m aste_hotel.run
-      - name: Genera dashboard
+      - name: Commit data_hotel.json
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data_hotel.json || true
+          git commit -m "aggiorna dati alberghi [skip ci]" || echo "nessuna modifica"
+          git pull --rebase --autostash || true
+          git push || echo "push fallito, riprovo al prossimo giro"
+      - name: Genera dashboard (alberghi + zone)
         run: |
           mkdir -p site
           python -c "
-          from aste_hotel.dashboard import carica, genera_html
-          html = genera_html(carica())
+          from aste_hotel.dashboard import carica_json, genera_html, HOTEL_JSON, ZONE_JSON
+          html = genera_html(carica_json(HOTEL_JSON), carica_json(ZONE_JSON))
           open('site/index.html','w',encoding='utf-8').write(html)
-          print('dashboard generata')
+          print('dashboard a 3 tab generata')
           "
       - name: Salva database in cache
         uses: actions/cache/save@v4
