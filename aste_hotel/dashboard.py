@@ -68,7 +68,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aste - Dashboard</title>
 <style>
-:root{--bg:#0f1116;--card:#1a1d27;--bord:#2a2e3c;--txt:#e6e8ee;--mut:#9aa0b0;--acc:#4da3ff;--green:#36c98d;--amber:#d9a441;}
+:root{--bg:#ffffff;--card:#f5f6f8;--bord:#e2e5ea;--txt:#1a1d26;--mut:#6b7280;--acc:#1558d6;--green:#0a7d4b;--amber:#b45309;}
 *{box-sizing:border-box;}
 body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
 header{padding:22px 28px 6px;}
@@ -85,7 +85,7 @@ h1{margin:0;font-size:21px;font-weight:650;}
 table{width:100%;border-collapse:collapse;font-size:13px;}
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--bord);vertical-align:top;}
 th{color:var(--mut);font-weight:600;cursor:pointer;position:sticky;top:0;background:var(--bg);white-space:nowrap;}
-tr:hover td{background:#161922;}
+tr:hover td{background:#f0f2f5;}
 .price{font-weight:650;color:var(--green);white-space:nowrap;}
 .src,.zona{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--card);border:1px solid var(--bord);font-size:11px;color:var(--mut);}
 .zona{color:var(--acc);border-color:var(--acc);}
@@ -93,17 +93,17 @@ a.det{color:var(--acc);text-decoration:none;}
 a.det:hover{text-decoration:underline;}
 .muted{color:var(--mut);}
 .scaduta td{opacity:.5;}
-.sep td{background:#12151d;color:var(--amber);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;}
+.sep td{background:#f0f2f5;color:var(--amber);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;}
 .count{color:var(--mut);font-size:13px;margin-left:auto;}
 .title-cell{max-width:480px;}
 </style></head>
 <body>
-<header><h1>🔨 Aste — Dashboard</h1>
+<header><h1>Aste — Dashboard</h1>
 <div class="sub">aggiornata al __OGGI__</div></header>
 <div class="tabs">
-  <div class="tab active" data-tab="hotel">🏨 Aste Alberghi<span class="badge" id="b-hotel"></span></div>
-  <div class="tab" data-tab="roma">🏛 Aste Roma<span class="badge" id="b-roma"></span></div>
-  <div class="tab" data-tab="sardegna">🌊 Aste Sardegna<span class="badge" id="b-sardegna"></span></div>
+  <div class="tab active" data-tab="hotel">Aste Alberghi<span class="badge" id="b-hotel"></span></div>
+  <div class="tab" data-tab="roma">Aste Roma<span class="badge" id="b-roma"></span></div>
+  <div class="tab" data-tab="sardegna">Aste Sardegna<span class="badge" id="b-sardegna"></span></div>
 </div>
 <div class="bar">
   <input type="text" id="q" placeholder="Cerca...">
